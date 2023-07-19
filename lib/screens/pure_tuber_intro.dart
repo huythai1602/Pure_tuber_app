@@ -3,6 +3,7 @@ import 'package:pure_tuber_app/screens/home_screen.dart';
 import 'package:pure_tuber_app/screens/intro_screen.dart';
 import 'package:pure_tuber_app/screens/intro_screen_2.dart';
 import 'package:pure_tuber_app/screens/intro_screen_3.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class PureTuberIntro extends StatefulWidget {
@@ -13,8 +14,15 @@ class PureTuberIntro extends StatefulWidget {
 }
 
 class _PureTuberIntroState extends State<PureTuberIntro> {
+  final isFirst = true;
+  late final SharedPreferences prefs;
   final _controller = PageController();
   String _labelButton = 'Tiếp theo';
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((value) => prefs = value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,13 +89,16 @@ class _PureTuberIntroState extends State<PureTuberIntro> {
     );
   }
 
-  void nextPage() {
+  void nextPage() async {
     _controller.animateToPage(_controller.page!.toInt() + 1,
         duration: const Duration(milliseconds: 400), curve: Curves.easeIn);
-    if (_controller.page!.toInt() + 1 > 2) {
-      Navigator.push(
+    bool first = isFirst;
+    await prefs.setBool('isFirst', isFirst);
+    if (_controller.page!.toInt() + 1 > 2 && first == true) {
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,
       );
     }
   }

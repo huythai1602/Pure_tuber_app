@@ -1,5 +1,10 @@
 import 'package:bottom_bar/bottom_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:pure_tuber_app/screens/my_account_screen.dart';
+import 'package:pure_tuber_app/screens/my_videos_screen.dart';
+import 'package:pure_tuber_app/widgets/tab_view_yt.dart';
+import 'package:pure_tuber_app/screens/dumb_data.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,76 +14,91 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentPage = 0;
-  final _pageController = PageController();
+  int _selectedIndex = 0;
+  late List<Widget> bodies;
+  late YoutubePlayerController controller;
+  @override
+  void deactivate() {
+    controller.pause();
+    super.deactivate();
+  }
+
+  @override
+  void initState() {
+    bodies = [
+      _buildHomeTab(),
+      const MyVideoScreen(),
+      const MyAccountScreen(),
+    ];
+    super.initState();
+
+    const url = 'https://www.youtube.com/watch?v=PzDbSVH-aMs';
+
+    controller = YoutubePlayerController(
+      initialVideoId: YoutubePlayer.convertUrlToId(url)!,
+      flags: const YoutubePlayerFlags(
+        mute: false,
+        loop: false,
+        autoPlay: true,
+        hideControls: false,
+      ),
+    )..addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+  }
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 5,
       child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          elevation: 0,
-          title: SizedBox(
-            height: 35,
-            child: TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
+        backgroundColor: Colors.black,
+        appBar: _selectedIndex == 2
+            ? null
+            : AppBar(
+                backgroundColor: Colors.black,
+                elevation: 0,
+                title: SizedBox(
+                  height: 35,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.only(bottom: 35 / 2),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide.none,
+                      ),
+                      hintText: 'Tìm kiếm',
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.white,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey,
+                    ),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
+                leadingWidth: 100,
+                leading: Image.asset(
+                  'assets/images/pure_tuber_icon.png',
+                  fit: BoxFit.fitWidth,
                 ),
-                hintText: 'Tìm kiếm',
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: Colors.white,
-                ),
-                filled: true,
-                fillColor: Colors.grey,
               ),
-            ),
-          ),
-          leading: Container(
-            child: Image.asset(
-              'assets/images/pure_tuber_icon.png',
-            ),
-          ),
-        ),
-        body: SafeArea(
-          child: Column(
-            // ignore: prefer_const_literals_to_create_immutables
-            children: [
-              const TabBar(isScrollable: true, tabs: <Widget>[
-                Tab(
-                  child: Text('Đặc tính'),
-                ),
-                Tab(
-                  child: Text('Xu hướng'),
-                ),
-                Tab(
-                  child: Text('Âm nhạc'),
-                ),
-                Tab(
-                  child: Text('Trò chơi'),
-                ),
-                Tab(
-                  child: Text('Phim ảnh'),
-                ),
-              ]),
-            ],
-          ),
-        ),
+        body: bodies[_selectedIndex],
         bottomNavigationBar: BottomBar(
-            selectedIndex: _currentPage,
-            onTap: (int index) {
-              _pageController.jumpToPage(index);
-              setState(() => _currentPage = index);
+            backgroundColor: Colors.black,
+            selectedIndex: _selectedIndex,
+            onTap: (value) {
+              return setState(() {
+                _selectedIndex = value;
+              });
             },
-            items: <BottomBarItem>[
+            items: const <BottomBarItem>[
               BottomBarItem(
                 icon: Icon(Icons.home),
                 activeColor: Color(0xFF2bc849),
@@ -95,6 +115,64 @@ class _HomeScreenState extends State<HomeScreen> {
                 title: Text('TÔI'),
               ),
             ]),
+      ),
+    );
+  }
+
+  Widget _buildHomeTab() {
+    return SafeArea(
+      child: Column(
+        children: [
+          Container(
+            color: Colors.black,
+            child: const TabBar(
+                isScrollable: true,
+                indicatorColor: Colors.green,
+                tabs: <Widget>[
+                  Tab(
+                    child: Text(
+                      'Đặc tính',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Xu hướng',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Âm nhạc',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Trò chơi',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Phim ảnh',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ]),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                TabBarViewYT(data: dataDumb[0]),
+                TabBarViewYT(data: dataDumb[1]),
+                TabBarViewYT(data: dataDumb[2]),
+                TabBarViewYT(data: dataDumb[3]),
+                TabBarViewYT(data: dataDumb[4]),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
